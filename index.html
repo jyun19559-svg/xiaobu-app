@@ -1,0 +1,961 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F4F9FF">
+<title>小步回来</title>
+<!-- PWA 支持 -->
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E5%B0%8F%E6%AD%A5%E5%9B%9E%E6%9D%A5%22%2C%22short_name%22%3A%22%E5%B0%8F%E6%AD%A5%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F4F9FF%22%2C%22theme_color%22%3A%22%23F4F9FF%22%7D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+/* =========================================================
+   治愈系双主题配置
+========================================================= */
+:root[data-theme="pink"] {
+  --bg: #FFF5F7; --bg-img: radial-gradient(#FFE4E1 1px, transparent 1px);
+  --card-bg: #FFFFFF; --text-main: #5D4A4A; --text-sub: #A89999;
+  --primary: #FF9EAF; --primary-shadow: #E88A9B;
+  --secondary: #AEEEEE; --secondary-shadow: #8CCBCB;
+  --yellow: #FFF6D9; --yellow-border: #FFE4A3;
+  --border: #FFD1DC; --emo-bg: #FFFBFC; --tag-text: #D4A373;
+}
+:root[data-theme="blue"] {
+  --bg: #F4F9FF; --bg-img: linear-gradient(180deg, #F4F9FF 0%, #FFFDF5 100%);
+  --card-bg: #FFFFFF; --text-main: #2D4059; --text-sub: #829CAE;
+  --primary: #7FA8D6; --primary-shadow: #6B91BB;
+  --secondary: #FFE08A; --secondary-shadow: #E8C56E;
+  --yellow: #FFF7D6; --yellow-border: #FFF2B2;
+  --border: #D6E4F0; --emo-bg: #F8FBFE; --tag-text: #C49D4A;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background-color: var(--bg); background-image: var(--bg-img); background-size: 20px 20px;
+  color: var(--text-main); font-family: "Comic Sans MS", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 15px; line-height: 1.7; -webkit-font-smoothing: antialiased; transition: background .3s, color .3s;
+}
+.app{max-width:520px;margin:0 auto;min-height:100vh;}
+#view{padding:0 20px calc(100px + env(safe-area-inset-bottom));}
+
+/* 悬浮主题切换按钮 */
+.theme-toggle-float {
+  position: fixed; top: 20px; right: 20px; z-index: 90;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--card-bg); border: 2px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.theme-toggle-float:active { transform: scale(0.9); }
+
+/* ---------- 通用组件 ---------- */
+.muted{color:var(--text-sub);font-size:13px;}
+.card{background: var(--card-bg); border: 2px dashed var(--border); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 0 rgba(0,0,0,0.03);}
+.section-title{font-size:15px;font-weight:600;color:var(--text-main);margin:0 0 10px;}
+.mt12{margin-top:12px;}
+
+.input{width:100%;border:2px dashed var(--border);background:var(--emo-bg);border-radius:16px;padding:14px 16px;font-size:15px;color:var(--text-main);font-family:inherit;outline:none;}
+.input:focus{border-color:var(--primary);background:#FFF;}
+.input::placeholder{color:#C5D5E6;}
+textarea.input{resize:vertical;line-height:1.6;}
+
+.btn-primary{display:block;width:100%;height:50px;border:0;border-radius:25px;background:var(--primary);color:#fff;font-size:16px;font-family:inherit;font-weight:bold;cursor:pointer; box-shadow: 0 4px 0 var(--primary-shadow); transition: all .1s; margin-top: 10px;}
+.btn-primary:active{ transform: translateY(4px); box-shadow: 0 0 0 var(--primary-shadow); }
+.btn-ghost{display:block;width:100%;height:50px;border:2px solid var(--secondary);border-radius:25px;background:var(--card-bg);color:var(--secondary-shadow);font-size:16px;font-weight:bold;font-family:inherit;cursor:pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.05); transition: all .1s;}
+.btn-ghost:active{ transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.05); }
+
+/* ---------- 页头 ---------- */
+.page-head{padding:26px 0 6px;text-align:center;}
+.date-line{font-size:12px;color:var(--primary);letter-spacing:1px;font-weight:bold;}
+.page-title{font-size:24px;font-weight:bold;margin:6px 0 0;color:var(--text-main);letter-spacing:2px;}
+.back-btn{border:0;background:transparent;color:var(--primary);font-size:14px;padding:0 0 8px;cursor:pointer;font-weight:bold;}
+
+/* ---------- 今日 ---------- */
+.add-bar{display:flex;gap:10px;margin:20px 0 24px;}
+.add-bar .input{flex:1;min-width:0;}
+.btn-add{height:50px;padding:0 24px;border:0;border-radius:25px;background:var(--primary);color:#fff;font-size:15px;font-weight:bold;cursor:pointer;box-shadow: 0 4px 0 var(--primary-shadow);}
+.btn-add:active{transform: translateY(4px); box-shadow: 0 0 0 var(--primary-shadow);}
+
+.empty{text-align:center;padding:40px 12px;color:var(--text-sub);font-size:14px;}
+.empty::before { content:'♡'; font-size:30px; color:var(--primary); display:block; margin-bottom:10px;}
+
+.task-list{display:flex;flex-direction:column;gap:16px;}
+.task{margin-bottom:0; position:relative;}
+.task::before {content:'☆'; position:absolute; top:-12px; left:-8px; font-size:20px; color:var(--primary);}
+.task-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.task-name{font-size:16px;font-weight:bold;color:var(--text-main);word-break:break-word;flex:1;}
+.tag{font-size:12px;padding:4px 10px;border-radius:12px;white-space:nowrap;font-weight:bold;border:1px solid var(--border);color:var(--text-sub);background:var(--card-bg);}
+.tag-doing{background:var(--primary);border-color:var(--primary);color:#FFF;}
+.tag-done{background:var(--yellow);border-color:var(--yellow-border);color:var(--tag-text);}
+.task-strategy{font-size:13px;color:var(--primary);margin-top:8px;background:var(--emo-bg);border-radius:10px;padding:6px 12px;display:inline-block;}
+.task-feedback{font-size:14px;color:var(--text-main);margin-top:12px;background:var(--emo-bg);border: 1px dashed var(--border);border-radius:14px;padding:14px 16px;line-height:1.8;}
+
+.task-actions{display:flex;gap:10px;margin-top:14px;align-items:center;}
+.btn-task{height:40px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;flex:1;border:0; transition: all .1s;}
+.btn-task.primary{background:var(--primary);color:#fff;box-shadow: 0 3px 0 var(--primary-shadow);}
+.btn-task.primary:active{transform: translateY(3px); box-shadow: 0 0 0 var(--primary-shadow);}
+.btn-task.ghost{background:var(--card-bg);color:var(--primary);border:2px solid var(--primary);}
+.btn-task.more{flex:0 0 40px;padding:0;background:var(--card-bg);border:1px solid var(--border);color:var(--text-sub);}
+
+/* ---------- 情绪弹窗 ---------- */
+.emo-grid{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
+.emo-chip{border:2px solid var(--border);background:var(--card-bg);border-radius:16px;padding:10px 16px;font-size:14px;color:var(--text-sub);cursor:pointer;font-weight:bold;}
+.emo-chip.sel{background:var(--primary);border-color:var(--primary);color:#FFF;box-shadow: 0 2px 0 var(--primary-shadow);}
+.sheet-head{margin-bottom:10px; text-align:center;}
+.sheet-title{font-size:18px;font-weight:bold;margin:0;color:var(--text-main);}
+.sheet-actions{margin-top:20px;display:flex;flex-direction:column;gap:12px;}
+
+/* ---------- 弹层 ---------- */
+.overlay{position:fixed;inset:0;background:rgba(45,64,89,0.3);backdrop-filter: blur(3px);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .18s;}
+.overlay.show{opacity:1;}
+.sheet{width:100%;max-width:520px;background:var(--bg);border-radius:30px 30px 0 0;border-top: 3px dashed var(--border);padding:26px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(18px);transition:transform .2s cubic-bezier(.2,.8,.3,1);max-height:88vh;overflow-y:auto;}
+.overlay.show .sheet{transform:translateY(0);}
+
+/* ---------- 完成反馈与见证卡 ---------- */
+.fb-wrap{text-align:left;padding:6px 0 20px;}
+.fb-label{font-size:13px;color:var(--primary);letter-spacing:1px;font-weight:bold;text-align:center; display:block;}
+.fb-task{font-size:22px;font-weight:bold;margin:10px 0 16px;color:var(--text-main);text-align:center;}
+.fb-text{font-size:15px;color:var(--text-main);line-height:1.9;background:var(--card-bg);border:2px solid var(--border);border-radius:20px;padding:20px;}
+.fb-quote {font-size:13px;color:var(--tag-text);margin-top:14px;text-align:right;font-style:italic;}
+.bgm-box {margin-top: 16px; padding: 10px 14px; background: var(--emo-bg); border-radius: 12px; font-size: 13px; color:var(--text-sub); display: flex; align-items: center; gap: 8px;}
+.bgm-box::before { content: '🎵'; font-size: 16px; }
+
+/* 🌟 全新精致拍立得见证卡 */
+.polaroid-container {
+  margin: 24px auto; width: 85%; max-width: 280px; background: #FFFFFF;
+  border-radius: 8px; padding: 14px 14px 28px 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  transform: rotate(-2deg); position: relative;
+}
+.polaroid-img-area {
+  background: var(--yellow); background-image: radial-gradient(var(--yellow-border) 1.5px, transparent 1.5px);
+  background-size: 15px 15px; border-radius: 4px; padding: 24px 14px 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 180px; position: relative; overflow: hidden;
+}
+.polaroid-img-area::before, .polaroid-img-area::after { content: '✨'; position: absolute; font-size: 18px; opacity: 0.8; }
+.polaroid-img-area::before { top: 12px; left: 12px; }
+.polaroid-img-area::after { bottom: 12px; right: 12px; }
+.polaroid-text { font-size: 14px; font-weight: bold; color: var(--text-main); line-height: 1.6; text-align: center; margin-top: 18px; z-index: 2; }
+.polaroid-text span { color: var(--primary); }
+.polaroid-bottom { text-align: center; margin-top: 16px; font-size: 12px; color: #C5D5E6; letter-spacing: 2px; font-weight: bold; }
+
+/* 软萌 SVG 小猫动画 */
+.cat-svg { width: 100px; height: 100px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96%, 98% { transform: scaleY(0.1); } }
+.eye-group { transform-origin: center; animation: blink 4s infinite; }
+
+/* ---------- 菜单 ---------- */
+.menu{display:flex;flex-direction:column;gap:12px;}
+.menu-item{width:100%;height:52px;border:2px solid var(--border);background:var(--card-bg);border-radius:16px;font-size:15px;font-weight:bold;color:var(--text-main);cursor:pointer;}
+.menu-item.danger{color:var(--primary);border-color:var(--primary);}
+.menu-item.plain{border-color:transparent;background:transparent;color:var(--text-sub);}
+
+/* ---------- 日历 ---------- */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:18px 0 14px;}
+.cal-title{font-size:18px;font-weight:bold;color:var(--text-main);}
+.cal-nav{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);background:var(--card-bg);color:var(--primary);font-size:20px;font-weight:bold;cursor:pointer;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;}
+.cal-weekdays span{text-align:center;font-size:12px;color:var(--text-sub);font-weight:bold;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:var(--card-bg);border:2px solid var(--border);border-radius:22px;padding:12px 10px;}
+.cal-cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;border:0;background:transparent;font-size:14px;color:var(--text-main);cursor:pointer;}
+.cal-cell.other{color:#D5DEE1;pointer-events:none;}
+.cal-cell.today{border:2px solid var(--primary);}
+.cal-dot{width:6px;height:6px;border-radius:50%;background:transparent;margin-top:2px;}
+.cal-dot.on{background:var(--primary);}
+
+/* ---------- 存钱罐 ---------- */
+.jar-header { text-align: center; font-size: 30px; margin-top: 10px; animation: float 3s infinite; }
+.jar-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 2px dashed var(--border); }
+.jar-item:last-child { border-bottom: none; }
+.jar-text { font-size: 15px; font-weight: bold; color: var(--text-main); }
+.jar-btn { background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 6px 14px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 0 var(--primary-shadow); }
+
+/* ---------- 档案 ---------- */
+.seg{display:flex;gap:8px;margin:18px 0 20px;overflow-x:auto;padding-bottom:2px;}
+.seg-btn{flex:1;min-width:64px;height:40px;border-radius:16px;border:2px solid var(--border);background:var(--card-bg);font-size:14px;font-weight:bold;color:var(--text-sub);cursor:pointer;}
+.seg-btn.on{background:var(--primary);border-color:var(--primary);color:#FFF;box-shadow: 0 2px 0 var(--primary-shadow);}
+
+.letter-card {background: var(--card-bg); border: 2px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 20px; font-family: "Kaiti SC", serif; color: var(--text-main); line-height: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);}
+.letter-sign { text-align: right; font-style: italic; color: var(--text-sub); margin-top: 20px; font-size: 14px; }
+
+.timeline { position: relative; padding-left: 20px; margin-top: 20px; }
+.timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--border); border-radius: 2px; }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: '✦'; position: absolute; left: -20px; top: 0; color: var(--primary); font-size: 14px; background: var(--bg); border-radius: 50%; }
+.timeline-date { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: bold; }
+.timeline-card { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 14px; padding: 14px; }
+.timeline-title { font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+.timeline-feedback { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+.timeline-reward { font-size: 12px; color: var(--tag-text); margin-top: 8px; display: inline-block; background: var(--yellow); padding: 2px 8px; border-radius: 8px; }
+
+/* 底部导航 */
+#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,0.95); backdrop-filter: blur(10px);border-top: 2px dashed var(--border);padding-bottom:env(safe-area-inset-bottom);}
+.tabbar-inner{display:flex;max-width:520px;margin:0 auto;}
+.tab-btn{flex:1;border:0;background:transparent;padding:10px 0 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:bold;color:var(--text-sub);cursor:pointer;}
+.tab-btn.active{color:var(--primary);}
+.tab-btn svg{width:22px;height:22px;}
+
+.card-special {background: var(--yellow);border: 2px dashed var(--yellow-border);padding: 24px;border-radius: 24px;margin-bottom: 16px;text-align: center;box-shadow: 0 4px 0 rgba(0,0,0,0.05);}
+.card-special .title { font-size: 18px; font-weight: bold; color: var(--tag-text); margin-bottom: 10px; }
+.card-special .text { font-size: 14px; color: var(--text-main); line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="app">
+  <main id="view"></main>
+</div>
+
+<!-- 悬浮主题切换 -->
+<div class="theme-toggle-float" id="themeBtn" onclick="toggleThemeQuick()">🎨</div>
+
+<nav id="tabbar"><div class="tabbar-inner">
+  <button class="tab-btn" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg><span>今日</span></button>
+  <button class="tab-btn" data-tab="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg><span>日历</span></button>
+  <button class="tab-btn" data-tab="jar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 6h8M6 10c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v6a6 6 0 0 1-6 6h-0a6 6 0 0 1-6-6v-6z"/><path d="M9 14h6"/></svg><span>罐子</span></button>
+  <button class="tab-btn" data-tab="archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 4h7l4 4v12a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 20V5.5A1.5 1.5 0 0 1 7 4z"/></svg><span>档案</span></button>
+  <button class="tab-btn" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></svg><span>设置</span></button>
+</div></nav>
+<div id="modal-root"></div>
+
+<script>
+"use strict";
+
+const savedTheme = localStorage.getItem('xiaobu_theme') || 'blue';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const pad2 = n => String(n).padStart(2, '0');
+const dk = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hashPick = (arr, seed) => { let h = 0; const s = String(seed); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return arr[Math.abs(h) % arr.length]; };
+
+/* 名言与BGM库 */
+const QUOTES = [
+  "“你不需要看到整个楼梯，只要迈出第一步。” —— 马丁·路德·金",
+  "“把今天过好，就是最好的远方。”",
+  "“累了就休息，这不是放弃，是身体在爱你。”",
+  "“万物皆有裂痕，那是光照进来的地方。” —— 莱昂纳德·科恩",
+  "“今天没干成什么也没关系，你喘过的每一口气都算数。”",
+  "“慢慢来，比较快。” ♡",
+  "“做颗倔强的星，在黑夜中独绽锋芒。”",
+  "“你回来了。停几天没啥。回来就接着走，不用解释。”"
+];
+const BGM_PLAYLIST = [
+  { name: "《Merry Christmas Mr. Lawrence》", artist: "坂本龙一" },
+  { name: "《Summer》", artist: "久石让" },
+  { name: "《平凡之路》", artist: "朴树" },
+  { name: "《云烟成雨》", artist: "房东的猫" },
+  { name: "《Nothing》", artist: "Bruno Major" },
+  { name: "《River Flows in You》", artist: "Yiruma" }
+];
+
+const STATUS_TEXT = { todo: '未开始', doing: '进行中', done: '已完成' };
+const EMOTIONS = {
+  before: ['平静', '开心', '焦虑', '烦躁', '疲惫', '低落', '紧张', '期待', '麻木', '其他'],
+  during: ['平静', '开心', '焦虑', '烦躁', '疲惫', '低落', '紧张', '期待', '麻木', '其他'],
+  after:  ['平静', '开心', '轻松', '疲惫', '烦躁', '失落', '满足', '没变化', '其他']
+};
+
+/* 1. 存储层 */
+const DB_NAME = 'xiaobu_huilai_v9_final';
+let _db = null;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('dayNotes')) db.createObjectStore('dayNotes', { keyPath: 'dateKey' });
+    };
+    req.onsuccess = () => { _db = req.result; resolve(_db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbAll(store) {
+  return new Promise((res, rej) => {
+    const t = _db.transaction(store, 'readonly');
+    const r = t.objectStore(store).getAll();
+    r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error);
+  });
+}
+function dbGet(store, key) {
+  return new Promise((res, rej) => {
+    const t = _db.transaction(store, 'readonly');
+    const r = t.objectStore(store).get(key);
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function dbPut(store, val) {
+  return new Promise((res, rej) => {
+    const t = _db.transaction(store, 'readwrite');
+    t.objectStore(store).put(val);
+    t.oncomplete = () => res(val); t.onerror = () => rej(t.error);
+  });
+}
+function dbDel(store, key) {
+  return new Promise((res, rej) => {
+    const t = _db.transaction(store, 'readwrite');
+    t.objectStore(store).delete(key);
+    t.oncomplete = () => res(); t.onerror = () => rej(t.error);
+  });
+}
+function dbUpdate(store, key, mutator) {
+  return new Promise((res, rej) => {
+    const t = _db.transaction(store, 'readwrite');
+    const s = t.objectStore(store);
+    let out = null;
+    const g = s.get(key);
+    g.onsuccess = () => {
+      if (!g.result) { rej(new Error('记录不存在')); return; }
+      out = mutator(g.result) || g.result;
+      s.put(out);
+    };
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+  });
+}
+
+/* 2. 全局状态 */
+const S = { tab: 'today', todayKey: dk(), allTasks: [], todayTasks: [], calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), dayKey: null, dayTasks: [], dayNote: '', archiveTab: 'week', settings: { rewardJar: [], reminderMins: 10 } };
+
+async function loadSettings() {
+  const rows = await dbAll('settings');
+  for (const r of rows) S.settings[r.key] = r.value;
+  if (!S.settings.rewardJar) S.settings.rewardJar = []; 
+}
+async function saveSetting(key, value) {
+  S.settings[key] = value;
+  await dbPut('settings', { key, value });
+}
+async function reloadAll() {
+  S.allTasks = await dbAll('tasks');
+  S.todayKey = dk();
+  S.todayTasks = S.allTasks.filter(t => t.dateKey === S.todayKey).sort((a, b) => a.createdAt - b.createdAt);
+}
+window.switchTheme = function(themeName) {
+  document.documentElement.setAttribute('data-theme', themeName);
+  localStorage.setItem('xiaobu_theme', themeName);
+  render();
+}
+window.toggleThemeQuick = function() {
+  const current = document.documentElement.getAttribute('data-theme') || 'blue';
+  const next = current === 'blue' ? 'pink' : 'blue';
+  switchTheme(next);
+  const btn = document.getElementById('themeBtn');
+  btn.style.transform = 'rotate(180deg) scale(1.1)';
+  setTimeout(() => btn.style.transform = 'none', 300);
+}
+
+/* 3. 弹层与问候 */
+function openModal(html, opts = {}) {
+  const root = $('#modal-root');
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet';
+  sheet.innerHTML = html;
+  ov.appendChild(sheet);
+  root.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('show'));
+  const close = () => { ov.classList.remove('show'); setTimeout(() => ov.remove(), 190); };
+  if (opts.dismissible !== false) ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  const api = { el: sheet, overlay: ov, close };
+  if (opts.onMount) opts.onMount(api);
+  return api;
+}
+
+async function checkGreetings() {
+  const now = new Date(); const today = dk(); const hour = now.getHours();
+  const lastVisit = S.settings.lastVisitDate;
+  let isReturning = false;
+  
+  if (lastVisit && lastVisit !== today) {
+    if (new Date(today).getTime() - new Date(lastVisit).getTime() > 86400000) { 
+      isReturning = true; await saveSetting('returnCount', (S.settings.returnCount || 0) + 1);
+    }
+  }
+  if (lastVisit !== today) await saveSetting('lastVisitDate', today);
+
+  if (isReturning) {
+    openModal(`<div class="card-special"><div class="title">欢迎回来呀 ♡</div><div class="text">停几天没什么大不了的。<br>回来就接着走，不用解释~</div></div><button class="btn-primary" id="btn-welcome">嗯，看看今天</button>`, { dismissible: false, onMount(api) { api.el.querySelector('#btn-welcome').onclick = api.close; } });
+  }
+}
+
+/* 4. 任务流与提醒 */
+function mkEmotion(stage, rec) { return { id: uid(), stage, label: rec.label, note: rec.note || '', at: Date.now() }; }
+
+// 自动提醒检查器
+setInterval(async () => {
+  if ($('#modal-root').children.length > 0) return; // 有弹窗时不打扰
+  const now = Date.now();
+  const needRemind = S.allTasks.find(t => t.status === 'doing' && t.remindAt && t.remindAt <= now && !t.remindDone);
+  
+  if (needRemind) {
+    openModal(`
+      <div class="sheet-head"><h2 class="sheet-title">还在做「${esc(needRemind.name)}」吗？</h2><p class="sheet-sub">想的话，可以顺手记一下现在的心情。</p></div>
+      <div class="sheet-actions">
+        <button class="btn-primary" id="rmRecord">记录当前情绪</button>
+        <button class="btn-ghost" id="rmLater">5 分钟后再说</button>
+        <button class="btn-ghost" id="rmSkip" style="border:none;box-shadow:none;color:var(--text-sub);">跳过这次</button>
+      </div>
+    `, {
+      dismissible: false,
+      onMount(api) {
+        api.el.querySelector('#rmRecord').onclick = () => { api.close(); duringFlow(needRemind.id); };
+        api.el.querySelector('#rmLater').onclick = async () => {
+          api.close(); await dbUpdate('tasks', needRemind.id, x => { x.remindAt = Date.now() + 5 * 60000; return x; }); await reloadAll();
+        };
+        api.el.querySelector('#rmSkip').onclick = async () => {
+          api.close(); await dbUpdate('tasks', needRemind.id, x => { x.remindDone = true; return x; }); await reloadAll();
+        };
+      }
+    });
+  }
+}, 30000); // 每30秒检查一次
+
+function emotionDialog({ title, options, onSave, onSkip }) {
+  const chips = options.map(o => `<button type="button" class="emo-chip" data-emo="${esc(o)}">${esc(o)}</button>`).join('');
+  openModal(`
+    <div class="sheet-head"><h2 class="sheet-title">${esc(title)}</h2></div>
+    <div class="emo-grid">${chips}</div>
+    <textarea id="emoNote" class="input" rows="2" placeholder="想补充的话（选填）"></textarea>
+    <div class="sheet-actions"><button class="btn-primary" id="emoSave">记录</button><button class="btn-ghost" id="emoSkip">跳过也没关系</button></div>
+  `, {
+    dismissible: false,
+    onMount(api) {
+      let selected = null;
+      api.el.querySelectorAll('.emo-chip').forEach(c => {
+        c.onclick = () => { api.el.querySelectorAll('.emo-chip').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); selected = c.dataset.emo; };
+      });
+      api.el.querySelector('#emoSave').onclick = () => { const note = api.el.querySelector('#emoNote').value.trim(); api.close(); if (!selected) { onSkip && onSkip(); return; } onSave && onSave({ label: selected, note }); };
+      api.el.querySelector('#emoSkip').onclick = () => { api.close(); onSkip && onSkip(); };
+    }
+  });
+}
+
+async function addTask() {
+  const input = $('#newTaskInput'); if (!input) return;
+  const name = input.value.trim(); if (!name) { input.focus(); return; }
+  const task = { id: uid(), name, dateKey: S.todayKey, createdAt: Date.now(), startedAt: null, completedAt: null, status: 'todo', strategy: '', emotions: [], feedback: '', quote: '', remindAt: null, remindDone: false };
+  await dbPut('tasks', task); input.value = ''; await reloadAll(); render();
+}
+
+function startTaskFlow(id) {
+  emotionDialog({ title: '准备开始，感觉如何？', options: EMOTIONS.before, 
+    onSave: rec => dbUpdate('tasks', id, x => { x.emotions.push(mkEmotion('before', rec)); x.startedAt = Date.now(); x.status = 'doing'; const mins = Number(S.settings.reminderMins)||10; x.remindAt = Date.now() + mins*60000; x.remindDone = false; return x; }).then(()=>{reloadAll();render()}), 
+    onSkip: () => dbUpdate('tasks', id, x => { x.startedAt = Date.now(); x.status = 'doing'; const mins = Number(S.settings.reminderMins)||10; x.remindAt = Date.now() + mins*60000; x.remindDone = false; return x; }).then(()=>{reloadAll();render()})
+  });
+}
+function duringFlow(id) {
+  const t = S.allTasks.find(x => x.id === id); if (!t) return;
+  emotionDialog({ title: '现在感觉怎么样呀？', options: EMOTIONS.during, 
+    onSave: rec => dbUpdate('tasks', id, x => { x.emotions.push(mkEmotion('during', rec)); x.remindDone = true; return x; }).then(()=>{reloadAll();render()}), 
+    onSkip: () => { alert('没关系，按你舒服的节奏来~'); }
+  });
+}
+function completeFlow(id) {
+  emotionDialog({ title: '搞定啦！现在心情怎么样？', options: EMOTIONS.after, onSave: rec => doComplete(id, rec), onSkip: () => doComplete(id, null) });
+}
+
+async function doComplete(id, rec) {
+  await dbUpdate('tasks', id, x => { if (rec) x.emotions.push(mkEmotion('after', rec)); x.status = 'done'; x.completedAt = Date.now(); x.remindAt = null; x.remindDone = true; return x; });
+  const t = await dbGet('tasks', id);
+  
+  // 尝试请求 AI，若无则本地兜底
+  let fbLines = await callAI(t);
+  if (!fbLines) {
+    fbLines = [];
+    const n = t.name.trim();
+    const isMicro = n.length <= 5 || /水|书|收拾|扫地|静坐|发呆|伸个懒腰|呼吸|躺/.test(n);
+    fbLines.push(isMicro ? `「${n}」，虽然听起来很小，但你确确实实去做了。` : `「${n}」，你把它搞定了，没有拖延。`);
+    fbLines.push(t.strategy ? `你还用上了小策略：「${t.strategy}」，说明你在找方法。` : `没找借口直接去干了，这就已经很棒啦。`);
+    fbLines.push(`这是为你自己争取来的一点点小确幸。`);
+  }
+
+  const quote = hashPick(QUOTES, t.id + t.name);
+  const bgm = hashPick(BGM_PLAYLIST, t.id + 'bgm');
+  
+  await dbUpdate('tasks', id, x => { x.feedback = fbLines.join('\n'); x.quote = quote; x.bgm = bgm; return x; });
+  await reloadAll(); render(); showFeedback(t, fbLines, quote, bgm);
+}
+
+async function callAI(task) {
+  const url = (S.settings.aiProxyUrl || '').trim();
+  if (!url) return null;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'task_feedback', task: { name: task.name, strategy: task.strategy } }), signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data.text || data.content || (data.choices && data.choices[0].message.content);
+    if (!text) return null;
+    return text.split('。').filter(s=>s.trim()).map(s => s.trim() + '。');
+  } catch (e) { return null; }
+}
+
+/* 5. 见证卡渲染 */
+function showFeedback(task, lines, quote, bgm) {
+  const hasEmo = task.emotions.length > 0;
+  const stateText = hasEmo ? "在有些起伏的状态下，" : "在可能有点累的状态下，";
+  const witnessText = `今天${stateText}我完成了<span>「${task.name}」</span>。`;
+
+  openModal(`
+    <div class="fb-wrap">
+      <span class="fb-label">今天的你，值得被夸 ✧</span>
+      <h2 class="fb-task">${esc(task.name)}</h2>
+      
+      <div class="fb-text">
+        ${lines.map(l => `<div>${esc(l)}</div>`).join('')}
+        <div class="fb-quote">${esc(quote)}</div>
+        ${bgm ? `<div class="bgm-box">推荐 BGM：<b>${esc(bgm.name)}</b> - ${esc(bgm.artist)}</div>` : ''}
+      </div>
+
+      <div id="capture-area">
+        <div class="polaroid-container">
+          <div class="polaroid-img-area">
+            <!-- 精致的 SVG 软萌猫猫 -->
+            <svg class="cat-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#3b3b3b" />
+                  <stop offset="100%" stop-color="#1a1a1a" />
+                </linearGradient>
+                <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#a3c9f1" />
+                  <stop offset="100%" stop-color="#6da1d9" />
+                </linearGradient>
+              </defs>
+              <!-- 猫耳 -->
+              <path d="M 30 50 L 20 20 L 45 40 Z" fill="url(#bodyGrad)" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M 90 50 L 100 20 L 75 40 Z" fill="url(#bodyGrad)" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M 25 45 L 22 28 L 38 40 Z" fill="#FFB3C6" />
+              <path d="M 95 45 L 98 28 L 82 40 Z" fill="#FFB3C6" />
+              <!-- 身体 -->
+              <ellipse cx="60" cy="70" rx="38" ry="32" fill="url(#bodyGrad)" />
+              <!-- 眼睛（带眨眼动画） -->
+              <g class="eye-group">
+                <ellipse cx="45" cy="65" rx="8" ry="10" fill="url(#eyeGrad)" />
+                <ellipse cx="75" cy="65" rx="8" ry="10" fill="url(#eyeGrad)" />
+                <circle cx="47" cy="62" r="3" fill="#FFF" />
+                <circle cx="77" cy="62" r="3" fill="#FFF" />
+              </g>
+              <!-- 腮红 -->
+              <ellipse cx="35" cy="78" rx="6" ry="3" fill="#FFB3C6" opacity="0.6"/>
+              <ellipse cx="85" cy="78" rx="6" ry="3" fill="#FFB3C6" opacity="0.6"/>
+              <!-- 嘴巴 -->
+              <path d="M 55 75 Q 60 80 65 75" fill="none" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <div class="polaroid-text">${witnessText}</div>
+          </div>
+          <div class="polaroid-bottom">✦ 小步回来 · 专属纪念 ✦</div>
+        </div>
+      </div>
+      
+      <div style="margin-top:20px; border-top:2px dashed var(--border); padding-top:16px;">
+        <label class="muted" style="display:block; margin-bottom:8px; font-weight:bold; color:var(--primary);">辛苦啦，给自己什么奖励？（将存入罐子）</label>
+        <input id="rewardInput" class="input" placeholder="比如：喝杯奶茶、看集剧...">
+      </div>
+    </div>
+    <button class="btn-ghost" id="btnSaveImg" style="margin-bottom:10px; border-color:#FFE08A; color:#E8C56E;">📸 保存见证卡到相册</button>
+    <button class="btn-primary" id="fbOk">收下奖励并放入罐子</button>
+  `, { 
+    dismissible: false, 
+    onMount(api) { 
+      api.el.querySelector('#btnSaveImg').onclick = () => {
+        const btn = api.el.querySelector('#btnSaveImg');
+        btn.innerText = "生成中...";
+        html2canvas(document.querySelector('#capture-area .polaroid-container'), { scale: 2, backgroundColor: null }).then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          const a = document.createElement('a'); a.href = imgData; a.download = `小步见证卡_${task.name}.png`; a.click();
+          btn.innerText = "📸 保存见证卡到相册";
+        }).catch(err => { alert('截图失败啦，你可以直接手机截屏~'); btn.innerText = "📸 保存见证卡到相册"; });
+      };
+
+      api.el.querySelector('#fbOk').onclick = async () => {
+        const reward = api.el.querySelector('#rewardInput').value.trim();
+        if (reward) {
+          await dbUpdate('tasks', task.id, x => { x.reward = reward; return x; });
+          S.settings.rewardJar.push({ id: uid(), text: reward, date: dk() });
+          await saveSetting('rewardJar', S.settings.rewardJar);
+        }
+        api.close(); await reloadAll(); render();
+      }; 
+    } 
+  });
+}
+
+/* 6. 视图渲染 */
+function render() {
+  const view = $('#view'); let html = '';
+  switch (S.tab) {
+    case 'today': html = viewToday(); break;
+    case 'calendar': html = viewCalendar(); break;
+    case 'day': html = viewDay(); break;
+    case 'jar': html = viewJar(); break;
+    case 'archive': html = viewArchive(); break;
+    case 'settings': html = viewSettings(); break;
+  }
+  view.innerHTML = html;
+  $$('#tabbar .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === (S.tab === 'day' ? 'calendar' : S.tab)));
+}
+
+function taskCard(t) {
+  let actions = '';
+  if (t.status === 'todo') actions = `<button class="btn-task primary" data-act="start" data-id="${t.id}">开始</button>`;
+  else if (t.status === 'doing') actions = `<button class="btn-task ghost" data-act="during" data-id="${t.id}">记心情</button><button class="btn-task primary" data-act="done" data-id="${t.id}">我做到啦</button>`;
+  else if (t.status === 'done') actions = `<button class="btn-task ghost" data-act="during" data-id="${t.id}">补记</button>`;
+  
+  const emoHtml = t.emotions.filter(e=>e.stage==='during').map(e => `<span class="tag" style="background:var(--emo-bg); margin-right:4px; font-size:10px;">过程中: ${esc(e.label)}</span>`).join('');
+
+  return `
+  <article class="card task">
+    <div class="task-head">
+      <div class="task-name">${esc(t.name)}</div>
+      <span class="tag tag-${t.status}">${STATUS_TEXT[t.status]}</span>
+    </div>
+    ${emoHtml ? `<div style="margin-top:6px;">${emoHtml}</div>` : ''}
+    ${t.strategy ? `<div class="task-strategy">策略：${esc(t.strategy)}</div>` : ''}
+    ${t.feedback ? `<div class="task-feedback">${esc(t.feedback)}</div>` : ''}
+    ${t.reward ? `<div style="color:var(--tag-text); font-weight:bold; margin-top:8px; background:var(--yellow); padding:4px 10px; border-radius:8px; display:inline-block; font-size:13px;">🎁 奖励已存入罐子：${esc(t.reward)}</div>` : ''}
+    <div class="task-actions">
+      ${actions}
+      <button class="btn-task more" data-act="more" data-id="${t.id}">···</button>
+    </div>
+  </article>`;
+}
+
+function viewToday() {
+  const dailyQuote = hashPick(QUOTES, dk() + 'daily');
+  return `
+  <div class="page-head">
+    <div class="date-line">${new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })} ♡</div>
+    <h1 class="page-title">今天的小事</h1>
+  </div>
+  <div class="letter-card" style="font-family:inherit; padding:16px; margin-bottom:20px; text-align:center; font-size:13px; color:var(--primary);">${esc(dailyQuote)}</div>
+  <div class="add-bar">
+    <input id="newTaskInput" class="input" placeholder="今天想干点啥？多小都行..." autocomplete="off">
+    <button class="btn-add" data-act="add">添加</button>
+  </div>
+  ${S.todayTasks.length === 0 ? `<div class="empty"><p>今天还没有记录哦。</p></div>` : `<div class="task-list">${S.todayTasks.map(taskCard).join('')}</div>`}
+  `;
+}
+
+/* 找回日历 */
+function viewCalendar() {
+  const y = S.calYear, m = S.calMonth;
+  const first = new Date(y, m, 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+
+  const cells = [];
+  for (let i = startOffset - 1; i >= 0; i--) cells.push({ d: prevDays - i, date: null });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ d, date: dk(new Date(y, m, d)) });
+  let nd = 1;
+  while (cells.length % 7 !== 0) cells.push({ d: nd++, date: null });
+
+  const todayStr = dk();
+  const grid = cells.map(c => {
+    if (!c.date) return `<div class="cal-cell other">${c.d}</div>`;
+    const has = S.allTasks.some(t => t.dateKey === c.date);
+    const isToday = c.date === todayStr;
+    return `<button class="cal-cell ${isToday ? 'today' : ''}" data-act="openDay" data-date="${c.date}">
+      <span>${c.d}</span><span class="cal-dot ${has ? 'on' : ''}"></span>
+    </button>`;
+  }).join('');
+
+  return `
+  <div class="page-head"><h1 class="page-title">回忆本本</h1></div>
+  <div class="cal-head">
+    <button class="cal-nav" data-act="prevMonth">‹</button>
+    <div class="cal-title">${y} 年 ${m + 1} 月</div>
+    <button class="cal-nav" data-act="nextMonth">›</button>
+  </div>
+  <div class="cal-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+  <div class="cal-grid">${grid}</div>
+  `;
+}
+
+function viewDay() {
+  const k = S.dayKey || S.todayKey;
+  const tasks = S.dayTasks;
+  const dateObj = new Date(k);
+  
+  // 简单总结
+  const done = tasks.filter(t=>t.status==='done').length;
+  const summary = tasks.length === 0 ? '这天没有记录。' : `这天记录了 ${tasks.length} 件事，完成了 ${done} 件。` + (tasks.flatMap(t=>t.emotions).length ? ` 记录了 ${tasks.flatMap(t=>t.emotions).length} 次心情。` : '没有记录心情。');
+
+  return `
+  <div class="page-head">
+    <button class="back-btn" data-act="backCal">‹ 返回日历</button>
+    <h1 class="page-title">${dateObj.getMonth()+1}月${dateObj.getDate()}日</h1>
+  </div>
+  <div class="card">
+    <div class="section-title">这天的行动</div>
+    ${tasks.length ? tasks.map(t => `
+      <div style="padding:10px 0; border-bottom:1px dashed var(--border);">
+        <div class="task-name">${esc(t.name)}</div>
+        ${t.feedback ? `<div class="task-feedback" style="margin-top:8px">${esc(t.feedback)}</div>` : ''}
+      </div>
+    `).join('') : '<p class="muted">没有记录</p>'}
+  </div>
+  <div class="card">
+    <div class="section-title">每日总结</div>
+    <p style="font-size:14px; color:var(--text-sub);">${summary}</p>
+  </div>
+  <div class="card">
+    <div class="section-title">这天的补充</div>
+    <textarea id="dayNoteInput" class="input" rows="3" placeholder="写下今天的心情或碎碎念...">${esc(S.dayNote)}</textarea>
+    <button class="btn-ghost mt12" data-act="saveDayNote">保存补充</button>
+  </div>
+  `;
+}
+
+function viewJar() {
+  const jar = S.settings.rewardJar || [];
+  return `
+  <div class="page-head"><h1 class="page-title">我的糖果罐</h1></div>
+  <div class="jar-header">🫙✨</div>
+  <div class="card">
+    <div class="section-title" style="text-align:center; color:var(--text-sub);">这里面装着你为自己攒下的奖励</div>
+    ${jar.length === 0 ? '<div class="empty" style="padding:20px"><p>罐子是空的呢，去完成一件小事吧~</p></div>' : 
+      jar.map(r => `
+        <div class="jar-item">
+          <div>
+            <div class="jar-text">🍬 ${esc(r.text)}</div>
+            <div class="muted" style="font-size:11px;">获得于 ${r.date}</div>
+          </div>
+          <button class="jar-btn" data-act="redeem" data-id="${r.id}">兑现！</button>
+        </div>
+      `).join('')}
+  </div>
+  `;
+}
+
+/* 找回周/月总结与时光轴 */
+function viewArchive() {
+  const doneTasks = S.allTasks.filter(t => t.status === 'done').sort((a,b) => b.completedAt - a.completedAt);
+  
+  let contentHtml = '';
+
+  if (S.archiveTab === 'timeline') {
+    contentHtml = `<div class="timeline">${doneTasks.map(t => {
+      const d = new Date(t.completedAt);
+      return `
+        <div class="timeline-item">
+          <div class="timeline-date">${d.getMonth()+1}月${d.getDate()}日 ${pad2(d.getHours())}:${pad2(d.getMinutes())}</div>
+          <div class="timeline-card">
+            <div class="timeline-title">${esc(t.name)}</div>
+            ${t.feedback ? `<div class="timeline-feedback">${esc(t.feedback)}</div>` : ''}
+            ${t.reward ? `<div class="timeline-reward">🎁 存入了奖励：${esc(t.reward)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('') || '<div class="empty">还没有记录哦</div>'}</div>`;
+  } else if (S.archiveTab === 'week') {
+    const totalDone = doneTasks.length;
+    const strategies = [...new Set(doneTasks.map(t => t.strategy).filter(Boolean))];
+    contentHtml = `
+      <div class="letter-card">
+        <p>本周你一共记录了 <b>${totalDone}</b> 件完成的事。</p>
+        ${strategies.length ? `<p>你用过了这些小策略：<br>${strategies.map(s=>`「${s}」`).join('、')}。说明你一直在找方法。</p>` : '<p>哪怕没记录策略，直接去行动本身就已经很棒了。</p>'}
+        <p>按你舒服的节奏来，每一小步都算数。</p>
+        <div class="letter-sign">—— 小步</div>
+      </div>
+    `;
+  } else {
+    const totalDone = doneTasks.length;
+    contentHtml = `
+      <div class="letter-card">
+        <p>回看过去，你已经在「小步回来」留下了 <b>${totalDone}</b> 个脚印。</p>
+        <p>没有断签的焦虑，没有排名的压力。这里只有你曾经为了照顾自己而做出的真实行动。</p>
+        <p>累了就休息，想起来了就回来看看。</p>
+        <div class="letter-sign">—— 小步</div>
+      </div>
+    `;
+  }
+
+  return `
+  <div class="page-head"><h1 class="page-title">成长档案</h1></div>
+  <div class="seg">
+    <button class="seg-btn ${S.archiveTab === 'timeline' ? 'on' : ''}" data-act="archTab" data-v="timeline">时光轴</button>
+    <button class="seg-btn ${S.archiveTab === 'week' ? 'on' : ''}" data-act="archTab" data-v="week">本周</button>
+    <button class="seg-btn ${S.archiveTab === 'month' ? 'on' : ''}" data-act="archTab" data-v="month">全部</button>
+  </div>
+  ${contentHtml}
+  `;
+}
+
+function viewSettings() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue';
+  return `
+  <div class="page-head"><h1 class="page-title">设置</h1></div>
+  
+  <div class="card">
+    <div class="section-title">切换外观</div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button style="flex:1;padding:12px;border-radius:16px;border:2px solid ${currentTheme==='blue'?'var(--primary)':'var(--border)'};background:var(--card-bg);font-weight:bold;" onclick="switchTheme('blue')">☁️ 晴日纸笺</button>
+      <button style="flex:1;padding:12px;border-radius:16px;border:2px solid ${currentTheme==='pink'?'var(--primary)':'var(--border)'};background:var(--card-bg);font-weight:bold;" onclick="switchTheme('pink')">🍓 草莓手账</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">进行中自动提醒</div>
+    <p class="muted" style="margin:0 0 10px">开始任务后，多久温柔提醒一次记心情？</p>
+    <div class="seg" style="margin:0">
+      ${[0, 10, 20].map(v => `<button class="seg-btn ${S.settings.reminderMins == v ? 'on' : ''}" data-act="setRem" data-v="${v}">${v===0?'关闭':v+' 分钟'}</button>`).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">AI 接入 (可选)</div>
+    <p class="muted">留空则使用本地温柔夸夸文案。填入代理地址可开启 AI 生成。</p>
+    <input id="aiUrlInput" class="input" placeholder="https://..." value="${esc(S.settings.aiProxyUrl || '')}">
+    <button class="btn-ghost mt12" data-act="saveAi">保存地址</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">数据安全</div>
+    <button class="btn-ghost mt12" data-act="exportData">📦 导出 JSON 备份</button>
+    <div style="height:10px;"></div>
+    <button class="btn-ghost" data-act="importPick">📥 从文件恢复数据</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+  `;
+}
+
+/* 7. 全局点击与逻辑 */
+document.getElementById('tabbar').addEventListener('click', e => {
+  const btn = e.target.closest('[data-tab]'); if (!btn) return;
+  S.tab = btn.dataset.tab; render();
+});
+
+document.getElementById('view').addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act; const id = el.dataset.id;
+
+  if (act === 'add') addTask();
+  else if (act === 'start') startTaskFlow(id);
+  else if (act === 'during') duringFlow(id);
+  else if (act === 'done') completeFlow(id);
+  else if (act === 'more') moreMenu(id);
+  
+  else if (act === 'redeem') {
+    if (confirm('确认已经享受了这个奖励吗？')) {
+      S.settings.rewardJar = S.settings.rewardJar.filter(r => r.id !== id);
+      await saveSetting('rewardJar', S.settings.rewardJar);
+      render();
+    }
+  }
+  
+  else if (act === 'prevMonth') { if(--S.calMonth<0){S.calMonth=11;S.calYear--;} render(); }
+  else if (act === 'nextMonth') { if(++S.calMonth>11){S.calMonth=0;S.calYear++;} render(); }
+  else if (act === 'openDay') {
+    S.tab = 'day'; S.dayKey = el.dataset.date;
+    S.dayTasks = S.allTasks.filter(t => t.dateKey === S.dayKey);
+    const note = await dbGet('dayNotes', S.dayKey);
+    S.dayNote = note ? note.note : '';
+    render();
+  }
+  else if (act === 'backCal') { S.tab = 'calendar'; render(); }
+  else if (act === 'saveDayNote') {
+    const note = $('#dayNoteInput').value.trim();
+    if (note) await dbPut('dayNotes', { dateKey: S.dayKey, note });
+    else await dbDel('dayNotes', S.dayKey);
+    S.dayNote = note; alert('保存成功~');
+  }
+
+  else if (act === 'archTab') { S.archiveTab = el.dataset.v; render(); }
+  else if (act === 'setRem') { await saveSetting('reminderMins', Number(el.dataset.v)); render(); }
+  else if (act === 'saveAi') { await saveSetting('aiProxyUrl', $('#aiUrlInput').value.trim()); alert('AI 地址已保存~'); }
+  
+  else if (act === 'exportData') {
+    const data = { tasks: await dbAll('tasks'), settings: await dbAll('settings'), notes: await dbAll('dayNotes') };
+    const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `小步回来备份_${dk()}.json`; a.click();
+  }
+  else if (act === 'importPick') { $('#importFile').click(); }
+});
+
+document.getElementById('view').addEventListener('change', async e => {
+  if (e.target.id === 'importFile') {
+    const file = e.target.files[0]; if (!file) return; e.target.value = ''; 
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.tasks || !data.settings) throw new Error('格式不对');
+        if (confirm(`将导入 ${data.tasks.length} 条记录，这会覆盖当前数据。`)) {
+          const tx = _db.transaction(['tasks', 'settings', 'dayNotes'], 'readwrite');
+          tx.objectStore('tasks').clear(); tx.objectStore('settings').clear(); tx.objectStore('dayNotes').clear();
+          for (const t of data.tasks) tx.objectStore('tasks').put(t);
+          for (const s of data.settings) tx.objectStore('settings').put(s);
+          if (data.notes) for (const n of data.notes) tx.objectStore('dayNotes').put(n);
+          tx.oncomplete = () => { alert('恢复成功！'); location.reload(); };
+        }
+      } catch (err) { alert('导入失败。'); }
+    };
+    reader.readAsText(file);
+  }
+});
+
+document.getElementById('view').addEventListener('keydown', e => {
+  if (e.target.id === 'newTaskInput' && e.key === 'Enter') { e.preventDefault(); addTask(); }
+});
+
+function moreMenu(id) {
+  const t = S.allTasks.find(x => x.id === id); if (!t) return;
+  openModal(`
+    <div class="menu">
+      <button class="menu-item" data-m="edit">✏️ 补充小策略/修改名称</button>
+      ${t.status === 'done' ? `<button class="menu-item" data-m="reopen">🔄 退回进行中</button>` : ''}
+      <button class="menu-item danger" data-m="delete">🗑 删除这条记录</button>
+      <button class="menu-item plain" data-m="cancel">取消</button>
+    </div>
+  `, {
+    onMount(api) {
+      api.el.querySelectorAll('[data-m]').forEach(btn => {
+        btn.onclick = async () => {
+          const m = btn.dataset.m; api.close();
+          if (m === 'edit') {
+            openModal(`
+              <div class="sheet-head"><h2 class="sheet-title">补充记录</h2></div>
+              <label class="muted" style="display:block;margin:14px 0 6px">事情名称</label>
+              <input id="edName" class="input" value="${esc(t.name)}">
+              <label class="muted" style="display:block;margin:14px 0 6px">用的小策略（选填）</label>
+              <input id="edStrategy" class="input" value="${esc(t.strategy)}" placeholder="比如：先打开文件再说...">
+              <div class="sheet-actions"><button class="btn-primary" id="edSave">保存</button></div>
+            `, { onMount(a2) { a2.el.querySelector('#edSave').onclick = async () => {
+              const name = a2.el.querySelector('#edName').value.trim();
+              const strategy = a2.el.querySelector('#edStrategy').value.trim();
+              a2.close(); await dbUpdate('tasks', id, x => { x.name = name; x.strategy = strategy; return x; });
+              await reloadAll(); render();
+            };}});
+          }
+          if (m === 'reopen') { await dbUpdate('tasks', id, x => { x.status = 'doing'; x.completedAt = null; return x; }); await reloadAll(); render(); }
+          if (m === 'delete') { await dbDel('tasks', id); await reloadAll(); render(); }
+        };
+      });
+    }
+  });
+}
+
+async function boot() {
+  try {
+    await openDB(); await loadSettings(); await reloadAll(); render(); await checkGreetings();
+  } catch (err) { console.error(err); }
+}
+boot();
+</script>
+</body>
+</html>
